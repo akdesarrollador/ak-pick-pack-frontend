@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import FondoPendingOrders from "../svg/FondoPendingOrders";
 import LogoutSVG from "../svg/LogoutSVG";
 // import { useMobilePortrait } from "../hooks/useMobilePortrait";
@@ -8,20 +8,11 @@ import CardOrder from "../components/CardOrder";
 import MoveLeftIcon from "../svg/LeftIcon";
 import { useResponsiveMarginTop } from "../hooks/useResponsiveMarginTop";
 import BoxTime from "../svg/BoxTime";
-
-// Mapeo de altura de pantalla a clases de margin
-const mtByHeight: { [key: number]: string } = {
-  300: "mt-72",
-  400: "mt-60",
-  500: "mt-60",
-  667: "mt-56",
-  750: "mt-56",
-  800: "mt-52",
-  850: "mt-56",
-  900: "mt-56",
-  950: "mt-56",
-  1000: "mt-56",
-};
+import useShowScrollTop from "../hooks/useShowScrollTop";
+import useInfiniteOrders from "../hooks/useInfiniteOrders";
+import { mtByHeightPendingORders } from "../data/constants";
+import Spinner from "../svg/Spinner";
+import ArrowUpIcon from "../svg/ArrowUpIcon";
 
 // Simulación de API (remplaza por fetch real)
 async function fetchOrdersFromAPI(page: number) {
@@ -47,53 +38,36 @@ async function fetchOrdersFromAPI(page: number) {
 }
 
 const PendingOrders = () => {
-  // const showSVG = useMobilePortrait();
-  const mtClass = useResponsiveMarginTop(mtByHeight);
+  const mtClass = useResponsiveMarginTop(mtByHeightPendingORders);
 
-  const [orders, setOrders] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const observerRef = useRef<HTMLDivElement | null>(null);
+  const { orders, loading, observerRef } =
+    useInfiniteOrders(fetchOrdersFromAPI);
 
-  const fetchOrders = useCallback(async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
+  const [scrolling, setScrolling] = useState(false);
 
-    const newOrders = await fetchOrdersFromAPI(page);
-    setOrders((prev) => [...prev, ...newOrders]);
+  const showScrollTop = useShowScrollTop(100);
 
-    if (newOrders.length === 0) {
-      setHasMore(false);
-    } else {
-      setPage((prev) => prev + 1);
-    }
-
-    setLoading(false);
-  }, [loading, page, hasMore]);
+  const handleScrollTop = () => {
+    setScrolling(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchOrders();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    const currentRef = observerRef.current;
-    if (currentRef) observer.observe(currentRef);
-
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
+    if (!scrolling) return;
+    const check = () => {
+      if (window.scrollY <= 10) {
+        setScrolling(false);
+      } else {
+        requestAnimationFrame(check);
+      }
     };
-  }, [fetchOrders]);
+    check();
+  }, [scrolling]);
 
   return (
-    <div className="relative w-full min-h-screen flex items-start justify-center bg-[#F9F9F9] ">
+    <div className="relative w-full min-h-screen flex items-start justify-center bg-[#F9F9F9]">
       {/* NAVBAR ICONOS */}
-      <div className="absolute top-4 left-0 right-0 flex justify-between items-center px-6 z-20">
+      <div className="absolute w-full md:w-8/12 mx-auto mt-2  flex justify-between items-center px-6 z-20">
         <button
           aria-label="Volver"
           className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -111,12 +85,12 @@ const PendingOrders = () => {
       {/* Fondo SVG SIEMPRE visible y creciendo */}
       <FondoPendingOrders
         className="absolute top-0 right-0 z-0 pointer-events-none w-full max-w-none h-auto transition-all"
-        style={{ minHeight: 180, maxHeight: 230 }}
+        style={{ minHeight: 180, maxHeight: 210 }}
         aria-hidden="true"
       />
 
       {/* Encabezado */}
-         <div className="absolute top-16 md:top-12 left-0 w-full flex flex-col items-center z-10">
+      <div className="absolute top-12 left-0 w-full flex flex-col items-center z-10">
         {/* SOLO EN MÓVIL: título + cantidad */}
         <span className="block md:hidden text-white text-xl drop-shadow-md">
           Pedidos pendientes
@@ -127,31 +101,31 @@ const PendingOrders = () => {
         {/* SOLO EN TABLET/DESKTOP: solo título, más grande y con icono */}
         <div className="hidden md:flex items-center gap-4">
           <BoxTime width={100} height={100} />
-          <span className="text-white text-5xl md:text-5xl font-semibold drop-shadow-md">
+          <span className="text-white text-4xl font-semibold drop-shadow-md">
             Pedidos pendientes
           </span>
-          
         </div>
       </div>
 
       {/* Contenido */}
       <div
-        className={`relative z-10 w-10/12 max-w-xl flex flex-col items-center justify-start ${mtClass}`}
+        className={`relative z-10 md:w-8/12 flex flex-col items-center justify-center ${mtClass}`}
       >
         <span className="text-[#6E7191] text-lg font-semibold mb-3 w-full text-left sm:hidden">
           Selecciona un pedido
         </span>
         <span className="text-[#6E7191] text-lg font-semibold mb-3 w-full text-center hidden sm:block">
-          Selecciona un pedido {orders.length}
+          Selecciona un pedido ({orders.length})
         </span>
         <Input placeholder="Buscar pedido..." />
 
         {/* Cards de pedidos */}
         <div
           className={`
-            flex gap-4 mt-6 w-full
+            flex gap-4 mt-6
             flex-col
-            sm:grid sm:grid-cols-2
+            w-full
+            sm:grid sm:grid-cols-2 md:grid-cols-3
           `}
         >
           {orders.map((order) => (
@@ -163,17 +137,30 @@ const PendingOrders = () => {
               status={order.status}
             />
           ))}
-
-          {loading && (
-            <div className="w-full flex justify-start items-center py-4 text-primary font-semibold">
-              Cargando más pedidos...
-            </div>
-          )}
-
-          {/* Observador para infinite scroll */}
-          <div ref={observerRef} className="h-1 md:col-span-2" />
         </div>
+
+        {/* Cargando más pedidos... SIEMPRE ABAJO */}
+        {loading && (
+          <div className="w-full flex justify-center items-center py-4 text-primary font-semibold">
+            Cargando más pedidos...
+          </div>
+        )}
+
+        {/* Observador para infinite scroll */}
+        <div ref={observerRef} className="h-1 md:col-span-2" />
       </div>
+
+      {/* Botón flotante para ir arriba */}
+      {showScrollTop && (
+        <button
+          aria-label="Ir arriba"
+          onClick={handleScrollTop}
+          className="fixed bottom-8 right-8 z-50 bg-primary text-white rounded-full shadow-lg p-3 hover:bg-primary/90 transition-all flex items-center justify-center"
+          style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.15)" }}
+        >
+          {scrolling ? <Spinner /> : <ArrowUpIcon />}
+        </button>
+      )}
     </div>
   );
 };

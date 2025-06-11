@@ -21,7 +21,7 @@ const CardOrder: React.FC<CardOrderProps> = ({
   maxHeight = 100,
 }) => (
   <div
-    className={`w-full bg-white rounded-[16px] shadow-md flex px-4 py-3 items-stretch`}
+    className={`w-full cursor-pointer hover:opacity-90 hover:scale-105 transition-all bg-white rounded-[16px] shadow-md flex px-4 py-3 items-stretch`}
     style={{ maxHeight, minHeight: 80 }}
   >
     {/* Columna izquierda */}
@@ -38,7 +38,7 @@ const CardOrder: React.FC<CardOrderProps> = ({
     {/* Columna derecha */}
     <div className="flex flex-col w-[40%] items-end justify-between">
       <div
-        className={`rounded-full px-3 py-1 text-[11px] font-semibold mt-1 ${statusStyles[status]}`}
+        className={`rounded-full px-2 py-1 text-[9px] font-semibold mt-1 ${statusStyles[status]}`}
       >
         {status === "por empacar" ? "Por empacar" : "Empacado"}
       </div>

@@ -16,6 +16,11 @@ export default {
       backgroundImage: {
         "custom-gradient": "linear-gradient(to right, #8642E5, #4800B3)",
       },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        serif: ["Merriweather", "serif"],
+        mono: ["Courier New", "monospace"],
+      },
     },
   },
   plugins: [],
