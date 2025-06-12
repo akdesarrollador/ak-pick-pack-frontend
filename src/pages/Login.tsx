@@ -1,16 +1,91 @@
+import React, { useState } from "react";
 import LogoLaLider from "../assets/la_lider_1.svg";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import FondoLoginSVG from "../svg/FondoLoginSVG";
 import { useMobilePortrait } from "../hooks/useMobilePortrait";
+import useAuthStore from "../stores/useAuthStore";
+import Loader from "../components/Loader";
+import { useGlobalStore } from "../stores/useGlobalStore";
+import { useNavigate } from "react-router";
 
 // Custom hook para detectar mobile y portrait
 
 const Login = () => {
   const showSVG = useMobilePortrait();
+  const { onLogin } = useAuthStore();
+  const { openSnackbar } = useGlobalStore();
+
+  // Estados locales para los inputs y loading
+  const [nombre, setNombre] = useState("");
+  const [clave, setClave] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate()
+
+  // Manejar submit de login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nombre || !clave) {
+      openSnackbar("Por favor ingresa usuario y contraseña", "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await onLogin({ nombre, clave }, navigate);
+      if (response?.codigo === 201 && response?.token) {
+        openSnackbar("¡Bienvenido!", "success");
+        // window.location.href = "/"; // Redirige al home o dashboard
+      } else {
+        openSnackbar(response?.mensaje || "Credenciales incorrectas", "error");
+      }
+    } catch (err) {
+      console.log(err)
+      openSnackbar("Error al iniciar sesión", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Inputs reutilizables
+  const renderInputs = () => (
+    <>
+      <Input
+        placeholder="Usuario"
+        value={nombre}
+        onChange={e => setNombre(e.target.value)}
+        disabled={loading}
+        autoFocus
+        // icon={<UserSVG/>}
+      />
+      <Input
+        type="password"
+        placeholder="Contraseña"
+        value={clave}
+        onChange={e => setClave(e.target.value)}
+        disabled={loading}
+        // icon={<PassSVG/>}
+      />
+      <div className="mt-4 w-full">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full flex items-center justify-center"
+        >
+          Iniciar sesión
+        </Button>
+      </div>
+    </>
+  );
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-white md:bg-[#DEDEDE]">
+      {/* Loader pantalla completa */}
+      {loading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30">
+          <Loader />
+        </div>
+      )}
+
       {/* SVG fondo SOLO en mobile y portrait */}
       {showSVG && (
         <FondoLoginSVG
@@ -27,7 +102,7 @@ const Login = () => {
         />
       )}
 
-      {/* MOBILE: login centrado, igual que antes */}
+      {/* MOBILE: login centrado */}
       <div className="relative z-10 w-10/12 h-full items-center justify-center flex flex-col -mt-24 sm:-mt-72 md:hidden">
         {/* HEADER */}
         <div className="flex flex-col gap-3 justify-start">
@@ -39,13 +114,12 @@ const Login = () => {
           </h1>
         </div>
         {/* INPUTS Y BOTONES */}
-        <div className="mx-auto flex flex-col items-center justify-center gap-3 mt-8 w-full">
-          <Input />
-          <Input type="password" placeholder="Contraseña" />
-          <div className="mt-4 w-full">
-            <Button>Iniciar sesion</Button>
-          </div>
-        </div>
+        <form
+          className="mx-auto flex flex-col items-center justify-center gap-3 mt-8 w-full"
+          onSubmit={handleLogin}
+        >
+          {renderInputs()}
+        </form>
       </div>
 
       {/* TABLET/DESKTOP: Card con dos columnas */}
@@ -59,13 +133,12 @@ const Login = () => {
             </h1>
           </div>
           {/* INPUTS Y BOTONES */}
-          <div className="mx-auto flex flex-col items-center justify-center gap-3 mt-8 w-full max-w-md">
-            <Input />
-            <Input type="password" placeholder="Contraseña" />
-            <div className="mt-4 w-full">
-              <Button>Iniciar sesion</Button>
-            </div>
-          </div>
+          <form
+            className="mx-auto flex flex-col items-center justify-center gap-3 mt-8 w-full max-w-md"
+            onSubmit={handleLogin}
+          >
+            {renderInputs()}
+          </form>
         </div>
         {/* Columna derecha */}
         <div className="flex flex-col items-center justify-center w-[40%] h-full bg-primary rounded-l-none rounded-r-[16px] p-10">

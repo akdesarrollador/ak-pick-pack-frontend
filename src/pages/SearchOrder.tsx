@@ -1,9 +1,23 @@
+import React from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import LogoutSVG from "../svg/LogoutSVG";
 import Fondo from "../assets/logo_caja_2.svg";
+import useAuthStore from "../stores/useAuthStore";
+import { useNavigate } from "react-router-dom";
+import { useGlobalStore } from "../stores/useGlobalStore";
 
 const SearchOrder = () => {
+  const { onLogout } = useAuthStore();
+  const { openSnackbar } = useGlobalStore();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await onLogout();
+    openSnackbar("Sesión cerrada correctamente", "success");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-white md:bg-[#DEDEDE]">
       {/* Botón logout arriba a la derecha */}
@@ -11,6 +25,7 @@ const SearchOrder = () => {
         <button
           aria-label="Cerrar sesión"
           className="p-2 rounded-full hover:bg-gray-100 transition"
+          onClick={handleLogout}
         >
           <LogoutSVG color="#8642E5" />
         </button>
@@ -21,8 +36,7 @@ const SearchOrder = () => {
         {/* HEADER */}
         <div className="flex flex-col gap-3 justify-start w-full">
           <div className="mx-auto flex items-center justify-center">
-          <img src={Fondo} className="w-48 mb-8" />
-
+            <img src={Fondo} className="w-48 mb-8" />
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold text-center mt-6 text-fonts">
             Ingrese el código del pedido
@@ -56,7 +70,6 @@ const SearchOrder = () => {
         {/* Columna derecha */}
         <div className="flex flex-col items-center justify-center w-[40%] h-full rounded-l-none rounded-r-[16px] p-10">
           <img src={Fondo} className="w-48 mb-8" />
-
           <div className="w-full text-center text-black text-xl font-semibold">
             ¡Bienvenido!
           </div>

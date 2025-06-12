@@ -6,6 +6,10 @@ interface InputProps {
   icon?: React.ReactNode;
   name?: string;
   id?: string;
+  value?: string; // <-- Agrega esto
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // <-- Y esto
+  disabled?: boolean; // <-- Y esto si quieres controlar disabled
+  autoFocus?: boolean; // <-- Y esto si lo usas
 }
 
 const Input = ({
@@ -14,6 +18,10 @@ const Input = ({
   icon,
   name = "email",
   id,
+  value,
+  onChange,
+  disabled,
+  autoFocus,
 }: InputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const autoId = useId();
@@ -31,13 +39,17 @@ const Input = ({
       )}
       <input
         placeholder={placeholder}
-        className={`w-full py-4 px-5 sm:py-4 sm:px-5 mt-2 bg-[#EFF0F6] rounded-[16px] border-0 text-zinc-800 text-base placeholder:text-[10px] shadow-md placeholder-[#6E7191] focus:outline-none focus:ring-2 focus:ring-primary transition ${
+        className={`w-full py-4 px-5 sm:py-4 sm:px-5 mt-2 bg-[#EFF0F6] rounded-[1rem] border-0 text-zinc-800 text-base placeholder:text-[0.9rem] shadow-md placeholder-[#6E7191] focus:outline-none focus:ring-2 focus:ring-primary transition ${
           icon ? "pl-12" : ""
         } ${isPassword ? "pr-12" : ""} `}
         name={name}
         id={inputId}
         type={inputType}
         autoComplete={isPassword ? "current-password" : undefined}
+        value={value} // <-- Añade esto
+        onChange={onChange} // <-- Y esto
+        disabled={disabled} // <-- Y esto
+        autoFocus={autoFocus} // <-- Y esto
       />
       {isPassword && (
         <button

@@ -216,7 +216,7 @@ const ProductItem = () => {
             <Button variant="fill">Siguiente</Button>
           </div>
         </div>
-      </div>
+      </div> 
     </div>
   );
 };
